@@ -1,6 +1,7 @@
+#coding:utf-8
 from exp import *
 import base64
-from multiprocessing import Process
+from multiprocessing import Process,Manager
 from suber import *
 
 
@@ -12,7 +13,8 @@ targets=["202.112.51.152",\
 "202.112.51.151",\
 # "202.112.51.152",\
 ]
-tarlist=[]
+manager=Manager()
+tarlist=manager.list()
 
 def encodefile(filename):
     ufile = open(filename,"r")
@@ -48,7 +50,6 @@ def run(target):
 # def decodefile
 
 # raw_input()
-
 
 
 def scan():
@@ -101,17 +102,17 @@ class Handler_ckx(StreamRequestHandler):
         print 'connection:', addr
         ip=addr[0]
         try:
-            idx=targest.index(ip)
+            idx=targets.index(ip)
             print idx
             flag=self.request.recv(100)
             tarlist[idx][1]="get"
             tarlist[idx][2]=flag
-            # print 'flag is %s '% flag
+            print 'flag is %s '% flag
+            print "tarlist in handler:"
+            print tarlist
         except:
             pass
 
-        # submit(flag,TOKEN)
-        # sleep(10)  #处理函数写在这里
         print os.getpid(),' is end.....'
 
 
@@ -121,27 +122,27 @@ tarlist=init_target_list(targets)
 
 
 
-def recv_server():
+def recv_server(tarlist):
+   
 
-    IP="" #为空不限制IP
-    PORT=8123
+    IP="" #
+    PORT=9001
     TOKEN="i_am_ckxckxckx"
-    MAXWORKERS=3  #最大进程数量
-    #实例化服务类对象
+    MAXWORKERS=3  #
+    print "::::::::::::::::::::::::::::::::::::::"
     server = Server(
         server_address=(IP,PORT),     # address
         RequestHandlerClass=Handler_ckx             # 请求类
     )
     server.allow_reuse_address=True
     server.max_children =MAXWORKERS     #这个很重要，默认max_children为40，根据性能需求设置
-    #开启服务
     server.serve_forever()
     server.server_close()
 
 
 
 p_scan=Process(target=scan,args=())
-p_recv=Process(target=recv_server,args=())
+p_recv=Process(target=recv_server,args=(tarlist))
 
 
 p_scan.start()
@@ -158,6 +159,7 @@ while 1:
     except:
         print "tarlist is null"
 
+    sleep(10)
 print "main"
 
 
