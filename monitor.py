@@ -4,7 +4,7 @@ import base64
 from multiprocessing import Process
 from suber import *
 import threading
-import sqlite3
+from sqltools import *
 import os
 import time
 
@@ -72,11 +72,14 @@ def scan():
 
 
             clsconnection()
+            updatedb("./our.db",target,"expsucceed","none")
 
             # shell()
 
         except:
             log.warn("fail at %s"%target)
+            updatedb("./our.db",target,"expfail","none")
+
 
 # global p
 
@@ -100,37 +103,7 @@ def initdb(name):
     conn.close()
 
 
-def insertdb(name,ip,status,flag):
-    conn = sqlite3.connect(name)
-    cursor = conn.cursor()
-    # cursor.execute('create table user (ip varchar(20), state varchar(20), flag varchar(40))')
-    cursor.execute('insert into awd (ip, status,flag) values ("{ip}", "{status}","{flag}")'.format(ip=ip,status=status,flag=flag))
-    cursor.close()
-    conn.commit()
-    conn.close()
-def updatedb(name,ip,status,flag):
-    conn=sqlite3.connect(name)
-    c = conn.cursor()
-    c.execute('UPDATE awd set status = "{status}", flag="{flag}" where ip="{ip}"'.format(ip=ip,status=status,flag=flag))
-    c.close()
-    conn.commit()
-    conn.close()
 
-def lookup(name):
-    conn=sqlite3.connect(name)
-    # c = conn.cursor()
-    os.system("clear")
-    cursor = conn.execute("SELECT ip,status,flag  from awd")
-    localtime = time.asctime( time.localtime(time.time()) )
-    print "\n===== time is :%s   ====\n"%localtime
-    # print "本地时间为 :", localtime
-    print "\t\ttarget"+"\t\tstatus\t\t\t\t\t\t\t\t\tflag"
-    print "\n"
-    for row in cursor:
-        log.info("%15s\t\t%5s\t\t %32s"%(row[0],row[1],row[2]))
-        # print "status = ", row[1]
-        # print "flag = ", row[2]
-        # print "SAL = ", row[3], "\n"
 
 #["ip","exp status","flag","rat status"]
 def init_target_list(targets):
@@ -191,7 +164,7 @@ def recv_server():
 
 
 
-# p_scan=Process(target=scan,args=())
+p_scan=Process(target=scan,args=())
 p_recv=Process(target=recv_server,args=())
 
 
@@ -210,11 +183,11 @@ lookup("./our.db")
 
 print "start listening...."
 
+
+
+p_scan.start()
+raw_input()
 p_recv.start()
-
-
-# updatedb("./our.db","127.0.0.1","get","afdksjfska")
-# p_scan.start()
 sleep(1)
 while 1:
     print "\n"*9
