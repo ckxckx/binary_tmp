@@ -6,6 +6,7 @@ import threading
 import os
 import requests
 
+#调用submit前先配置好提交的参数，函数可以在handler里写好
 
 def submit(flag, token):
     failed = '"status":"error"'
