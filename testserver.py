@@ -19,4 +19,4 @@ while 1:
         client.close()
     except:
         pass
-    sleep(1)
+    sleep(3)

